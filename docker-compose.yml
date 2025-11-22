@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # LocalStack for AWS SQS emulation
+  localstack:
+    image: localstack/localstack:latest
+    container_name: queueswap-localstack
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./localstack-init:/etc/localstack/init/ready.d"
+    networks:
+      - queueswap-network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: queueswap-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - "rabbitmq-data:/var/lib/rabbitmq"
+    networks:
+      - queueswap-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS Application (uncomment to run in Docker)
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: queueswap-app
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - PORT=3000
+  #     - QUEUE_PROVIDER=${QUEUE_PROVIDER:-sqs}
+  #     - AWS_REGION=us-east-1
+  #     - AWS_ACCESS_KEY_ID=test
+  #     - AWS_SECRET_ACCESS_KEY=test
+  #     - AWS_ENDPOINT=http://localstack:4566
+  #     - SQS_QUEUE_URL=http://localstack:4566/000000000000/test-queue
+  #     - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+  #     - RABBITMQ_QUEUE_NAME=test-queue
+  #   depends_on:
+  #     - localstack
+  #     - rabbitmq
+  #   networks:
+  #     - queueswap-network
+
+networks:
+  queueswap-network:
+    driver: bridge
+
+volumes:
+  rabbitmq-data:
+
