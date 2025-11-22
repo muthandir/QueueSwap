@@ -29,7 +29,7 @@
 ## Solution highlights
 
 - **Pluggable queues**: Single `IQueueService` abstraction with SQS, RabbitMQ, composite, and conditional implementations, wired via `QueueModule.forRoot/forFeature` and environment variables (no code changes to swap providers).
-- **Content-based routing**: `ConditionalQueueService` + routing strategies (e.g. `prescriptionRoutingStrategy`) route messages to SQS or RabbitMQ based on fields like `country` and `priority`.
+- **Content-based routing**: `ConditionalQueueService` + routing strategies (e.g. `prescriptionRoutingStrategy`) route messages to SQS or RabbitMQ based on `country`
 - **Migration-friendly dual write**: `CompositeQueueService` dual-writes to primary + secondary queues, but reads/deletes only from the primary—useful for side-by-side migrations and DR.
 - **Non-invasive publishing**: `@PublishToQueue` decorator + `QueuePublishInterceptor` publish messages at the controller boundary without coupling domain services to queue infrastructure.
 - **Startup safety**: `QueueReadinessService` checks queue health with retries on app startup, failing fast if queues are not reachable.
